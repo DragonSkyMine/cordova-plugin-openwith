@@ -51,7 +51,7 @@ function iosFolder(context) {
 
 function getCordovaParameter(configXml, variableName) {
   var variable;
-  var arg = process.argv.filter(function(arg) {
+  var arg = process.argv.filter(function (arg) {
     return arg.indexOf(variableName + '=') == 0;
   });
 
@@ -76,13 +76,13 @@ function getPreferenceValue(configXml, name) {
 
 // Determine the full path to the app's xcode project file.
 function findXCodeproject(context, callback) {
-  fs.readdir(iosFolder(context), function(err, data) {
+  fs.readdir(iosFolder(context), function (err, data) {
     var projectFolder;
     var projectName;
 
     // Find the project folder by looking for *.xcodeproj
     if (data && data.length) {
-      data.forEach(function(folder) {
+      data.forEach(function (folder) {
         if (folder.match(/\.xcodeproj$/)) {
           projectFolder = path.join(iosFolder(context), folder);
           projectName = path.basename(folder, '.xcodeproj');
@@ -106,9 +106,9 @@ function replacePreferencesInFile(filePath, preferences) {
   var content = fs.readFileSync(filePath, 'utf8');
 
   for (var i = 0; i < preferences.length; i++) {
-      var pref = preferences[i];
-      var regexp = new RegExp(pref.key, "g");
-      content = content.replace(regexp, pref.value);
+    var pref = preferences[i];
+    var regexp = new RegExp(pref.key, "g");
+    content = content.replace(regexp, pref.value);
   }
 
   fs.writeFileSync(filePath, content);
@@ -126,6 +126,8 @@ module.exports = {
   PLUGIN_ID,
   iosFolder,
   getPreferences,
+  getCordovaParameter,
+  getConfigXml,
   findXCodeproject,
   replacePreferencesInFile,
   log, redError,

@@ -91,7 +91,7 @@
 
 - (void) viewDidAppear:(BOOL)animated {
   [self.view endEditing:YES];
-
+  [self.view setHidden:YES];
   [self setup];
   [self debug:@"[viewDidAppear]"];
 
@@ -267,7 +267,6 @@
         }
       }];
     }
-
     // TEXT
     else if ([itemProvider hasItemConformingToTypeIdentifier:@"public.text"]) {
       [self debug:[NSString stringWithFormat:@"item provider = %@", itemProvider]];
@@ -279,13 +278,50 @@
 
       lastDataType = [NSString stringWithFormat:@"TEXT"];
 
-      [itemProvider loadItemForTypeIdentifier:@"public.text" options:nil completionHandler: ^(NSString* item, NSError *error) {
+      [itemProvider loadItemForTypeIdentifier:@"public.text" options:nil completionHandler: ^(NSData* item, NSError *error) {
         [self debug:[NSString stringWithFormat:@"public.text = %@", item]];
 
-        NSString *uti = @"public.text";
+          NSString *data = [[NSString alloc] initWithData:item encoding: NSUTF8StringEncoding];
+
+          NSString *uti = @"public.text";
         NSDictionary *dict = @{
           @"text" : self.contentText,
-          @"data" : item,
+          @"data" : data,
+          @"uti": uti,
+          @"utis": itemProvider.registeredTypeIdentifiers,
+          @"name": @"",
+          @"type": [self mimeTypeFromUti:uti],
+       };
+
+        [items addObject:dict];
+
+        --remainingAttachments;
+        if (remainingAttachments == 0) {
+          [self sendResults:results];
+        }
+      }];
+    }
+
+    // Data
+    else if ([itemProvider hasItemConformingToTypeIdentifier:@"public.data"]) {
+      [self debug:[NSString stringWithFormat:@"item provider = %@", itemProvider]];
+
+      if ([lastDataType length] > 0 && ![lastDataType isEqualToString:@"TEXT"]) {
+        --remainingAttachments;
+        continue;
+      }
+
+      lastDataType = [NSString stringWithFormat:@"DATA"];
+
+      [itemProvider loadItemForTypeIdentifier:@"public.data" options:nil completionHandler: ^(NSData* item, NSError *error) {
+        [self debug:[NSString stringWithFormat:@"public.data = %@", item]];
+
+        NSString *base64 = [self base64forData: item];
+
+        NSString *uti = @"public.data";
+        NSDictionary *dict = @{
+          @"text" : self.contentText,
+          @"data" : base64,
           @"uti": uti,
           @"utis": itemProvider.registeredTypeIdentifiers,
           @"name": @"",
@@ -346,6 +382,37 @@
   [self.fileManager copyItemAtURL:url toURL:targetUrl error:nil];
 
   return targetUrl.absoluteString;
+}
+
+- (NSString*) base64forData:(NSData*)theData {
+    const uint8_t* input = (const uint8_t*)[theData bytes];
+    NSInteger length = [theData length];
+
+    static char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+    NSMutableData* data = [NSMutableData dataWithLength:((length + 2) / 3) * 4];
+    uint8_t* output = (uint8_t*)data.mutableBytes;
+
+    NSInteger i;
+    for (i=0; i < length; i += 3) {
+        NSInteger value = 0;
+        NSInteger j;
+        for (j = i; j < (i + 3); j++) {
+            value <<= 8;
+
+            if (j < length) {
+                value |= (0xFF & input[j]);
+            }
+        }
+
+        NSInteger theIndex = (i / 3) * 4;
+        output[theIndex + 0] =                    table[(value >> 18) & 0x3F];
+        output[theIndex + 1] =                    table[(value >> 12) & 0x3F];
+        output[theIndex + 2] = (i + 1) < length ? table[(value >> 6)  & 0x3F] : '=';
+        output[theIndex + 3] = (i + 2) < length ? table[(value >> 0)  & 0x3F] : '=';
+    }
+
+    return [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
 }
 
 @end

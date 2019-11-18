@@ -76,10 +76,14 @@ module.exports = function (context) {
     files.config.concat(files.source).forEach(function (file) {
       replacePreferencesInFile(file.path, preferences);
     });
-    debugger;
+
     // Find if the project already contains the target and group
     var target = pbxProject.pbxTargetByName('"ShareExt"');
-    if (target) { log('ShareExt target already exists') }
+    if (target) {
+      log('ShareExt target already exists');
+      deferral.resolve();
+      return;
+    }
 
     if (!target) {
       // Add PBXNativeTarget to the project

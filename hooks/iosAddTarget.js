@@ -147,6 +147,7 @@ module.exports = function (context) {
     var configXml = getConfigXml(context);
     var PROVISIONING_PROFILE = getCordovaParameter(configXml, 'SHAREEXT_PROVISIONING_PROFILE');
     var DEVELOPMENT_TEAM = getCordovaParameter(configXml, 'SHAREEXT_DEVELOPMENT_TEAM');
+    var IOS_BUNDL_ID = getCordovaParameter(configXml, 'IOS_BUNDLE_IDENTIFIER');
     console.log('Adding team', DEVELOPMENT_TEAM, 'and provisoning profile', PROVISIONING_PROFILE);
     if (PROVISIONING_PROFILE && DEVELOPMENT_TEAM) {
       var configurations = pbxProject.pbxXCBuildConfigurationSection();
@@ -158,6 +159,11 @@ module.exports = function (context) {
             if (productName.indexOf('ShareExt') >= 0) {
               buildSettingsObj['PROVISIONING_PROFILE'] = PROVISIONING_PROFILE;
               buildSettingsObj['DEVELOPMENT_TEAM'] = DEVELOPMENT_TEAM;
+
+              buildSettingsObj['CODE_SIGN_IDENTITY'] = "iPhone Distribution";
+              buildSettingsObj['CODE_SIGN_STYLE'] = "Manual";
+              buildSettingsObj['PRODUCT_BUNDLE_IDENTIFIER'] = IOS_BUNDL_ID + ".shareextension";
+              buildSettingsObj['PROVISIONING_PROFILE_SPECIFIER'] = PROVISIONING_PROFILE;
               console.log('Added signing identities for extension!');
             }
           }

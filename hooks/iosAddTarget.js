@@ -78,7 +78,7 @@ module.exports = function (context) {
     });
 
     // Find if the project already contains the target and group
-    var target = pbxProject.pbxTargetByName('"ShareExt"');
+    var target = pbxProject.pbxTargetByName('"ShareExt"') || pbxProject.pbxTargetByName('ShareExt');
     if (target) {
       log('ShareExt target already exists');
       deferral.resolve();
@@ -138,34 +138,6 @@ module.exports = function (context) {
           var productName = buildSettingsObj['PRODUCT_NAME'];
           if (productName.indexOf('ShareExt') >= 0) {
             buildSettingsObj['CODE_SIGN_ENTITLEMENTS'] = '"ShareExtension/ShareExtension.entitlements"';
-          }
-        }
-      }
-    }
-
-    //Add development team and provisioning profile
-    var configXml = getConfigXml(context);
-    var PROVISIONING_PROFILE = getCordovaParameter(configXml, 'SHAREEXT_PROVISIONING_PROFILE');
-    var DEVELOPMENT_TEAM = getCordovaParameter(configXml, 'SHAREEXT_DEVELOPMENT_TEAM');
-    var IOS_BUNDL_ID = getCordovaParameter(configXml, 'IOS_BUNDLE_IDENTIFIER');
-    console.log('Adding team', DEVELOPMENT_TEAM, 'and provisoning profile', PROVISIONING_PROFILE);
-    if (PROVISIONING_PROFILE && DEVELOPMENT_TEAM) {
-      var configurations = pbxProject.pbxXCBuildConfigurationSection();
-      for (var key in configurations) {
-        if (typeof configurations[key].buildSettings !== 'undefined') {
-          var buildSettingsObj = configurations[key].buildSettings;
-          if (typeof buildSettingsObj['PRODUCT_NAME'] !== 'undefined') {
-            var productName = buildSettingsObj['PRODUCT_NAME'];
-            if (productName.indexOf('ShareExt') >= 0) {
-              buildSettingsObj['PROVISIONING_PROFILE'] = PROVISIONING_PROFILE;
-              buildSettingsObj['DEVELOPMENT_TEAM'] = DEVELOPMENT_TEAM;
-
-              buildSettingsObj['CODE_SIGN_IDENTITY'] = "iPhone Distribution";
-              buildSettingsObj['CODE_SIGN_STYLE'] = "Manual";
-              buildSettingsObj['PRODUCT_BUNDLE_IDENTIFIER'] = IOS_BUNDL_ID + ".shareextension";
-              buildSettingsObj['PROVISIONING_PROFILE_SPECIFIER'] = PROVISIONING_PROFILE;
-              console.log('Added signing identities for extension!');
-            }
           }
         }
       }

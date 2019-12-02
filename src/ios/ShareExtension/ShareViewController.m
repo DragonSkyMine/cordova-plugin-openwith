@@ -119,6 +119,12 @@
       lastDataType = [NSString stringWithFormat:@"FILE"];
 
       [itemProvider loadItemForTypeIdentifier:@"public.movie" options:nil completionHandler: ^(NSURL* item, NSError *error) {
+        if(error != nil){
+            --remainingAttachments;
+            if (remainingAttachments == 0) {
+              [self sendResults:results];
+            }
+        }
         NSString *fileUrl = [self saveFileToAppGroupFolder:item];
         NSString *suggestedName = item.lastPathComponent;
 
@@ -161,9 +167,16 @@
 
       lastDataType = [NSString stringWithFormat:@"FILE"];
 
-      [itemProvider loadItemForTypeIdentifier:@"public.image" options:nil completionHandler: ^(NSURL* item, NSError *error) {
-        NSString *fileUrl = [self saveFileToAppGroupFolder:item];
-        NSString *suggestedName = item.lastPathComponent;
+      [itemProvider loadItemForTypeIdentifier:@"public.image" options:nil completionHandler: ^(UIImage* item, NSError *error) {
+
+        if(error != nil){
+            --remainingAttachments;
+            if (remainingAttachments == 0) {
+              [self sendResults:results];
+            }
+        }
+        NSData *imageData = UIImagePNGRepresentation(item);
+        NSString *base64 = [self base64forData: imageData];
 
         NSString *uti = @"public.image";
         NSString *registeredType = nil;
@@ -177,10 +190,10 @@
         NSString *mimeType =  [self mimeTypeFromUti:registeredType];
         NSDictionary *dict = @{
           @"text" : self.contentText,
-          @"fileUrl" : fileUrl,
+          @"data" : base64,
           @"uti"  : uti,
           @"utis" : itemProvider.registeredTypeIdentifiers,
-          @"name" : suggestedName,
+          @"name" : @"",
           @"type" : mimeType
         };
 
@@ -205,6 +218,12 @@
       lastDataType = [NSString stringWithFormat:@"FILE"];
 
       [itemProvider loadItemForTypeIdentifier:@"public.file-url" options:nil completionHandler: ^(NSURL* item, NSError *error) {
+        if(error != nil){
+            --remainingAttachments;
+            if (remainingAttachments == 0) {
+              [self sendResults:results];
+            }
+        }
         NSString *fileUrl = [self saveFileToAppGroupFolder:item];
         NSString *suggestedName = item.lastPathComponent;
 
@@ -248,6 +267,12 @@
       lastDataType = [NSString stringWithFormat:@"URL"];
 
       [itemProvider loadItemForTypeIdentifier:@"public.url" options:nil completionHandler: ^(NSURL* item, NSError *error) {
+        if(error != nil){
+            --remainingAttachments;
+            if (remainingAttachments == 0) {
+              [self sendResults:results];
+            }
+        }
         [self debug:[NSString stringWithFormat:@"public.url = %@", item]];
 
         NSString *uti = @"public.url";
@@ -279,6 +304,12 @@
       lastDataType = [NSString stringWithFormat:@"TEXT"];
 
       [itemProvider loadItemForTypeIdentifier:@"public.text" options:nil completionHandler: ^(NSData* item, NSError *error) {
+        if(error != nil){
+            --remainingAttachments;
+            if (remainingAttachments == 0) {
+              [self sendResults:results];
+            }
+        }
         [self debug:[NSString stringWithFormat:@"public.text = %@", item]];
 
           NSString *data = [[NSString alloc] initWithData:item encoding: NSUTF8StringEncoding];
@@ -314,6 +345,12 @@
       lastDataType = [NSString stringWithFormat:@"DATA"];
 
       [itemProvider loadItemForTypeIdentifier:@"public.data" options:nil completionHandler: ^(NSData* item, NSError *error) {
+        if(error != nil){
+            --remainingAttachments;
+            if (remainingAttachments == 0) {
+              [self sendResults:results];
+            }
+        }
         [self debug:[NSString stringWithFormat:@"public.data = %@", item]];
 
         NSString *base64 = [self base64forData: item];

@@ -175,8 +175,9 @@
               [self sendResults:results];
             }
         }
+
         NSData *imageData = UIImagePNGRepresentation(item);
-        NSString *base64 = [self base64forData: imageData];
+        NSString *fileUrl = [self saveDataToAppGroupFolder:imageData];
 
         NSString *uti = @"public.image";
         NSString *registeredType = nil;
@@ -190,7 +191,7 @@
         NSString *mimeType =  [self mimeTypeFromUti:registeredType];
         NSDictionary *dict = @{
           @"text" : self.contentText,
-          @"data" : base64,
+          @"fileUrl" : fileUrl,
           @"uti"  : uti,
           @"utis" : itemProvider.registeredTypeIdentifiers,
           @"name" : @"",
@@ -387,7 +388,7 @@
 - (void) sendResults: (NSDictionary*)results {
   [self.userDefaults setObject:results forKey:@"shared"];
   [self.userDefaults synchronize];
-
+  NSObject *object = [self.userDefaults objectForKey:@"shared"];
   // Emit a URL that opens the cordova app
   NSString *url = [NSString stringWithFormat:@"%@://shared", SHAREEXT_URL_SCHEME];
   [self openURL:[NSURL URLWithString:url]];
@@ -412,6 +413,13 @@
   NSString *ret = (__bridge_transfer NSString *)cret;
 
   return ret == nil ? uti : ret;
+}
+
+- (NSString *) saveDataToAppGroupFolder: (NSData*)data {
+    NSURL *targetUrl = [[self.fileManager containerURLForSecurityApplicationGroupIdentifier:SHAREEXT_GROUP_IDENTIFIER] URLByAppendingPathComponent: [NSString stringWithFormat:@"file-%d", rand()]];
+    [data writeToURL:targetUrl atomically: true];
+
+  return targetUrl.absoluteString;
 }
 
 - (NSString *) saveFileToAppGroupFolder: (NSURL*)url {
